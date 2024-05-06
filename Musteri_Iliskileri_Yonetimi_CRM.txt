@@ -1,0 +1,7 @@
+Müşteri İlişkileri Yönetimi (CRM)
+
+Müşteri ekleme: Müşteri ekle butonuna basın. Müşterinin adını ad bölümüne, telefon numarası veya diğer iletişim adreslerini iletişim bölümüne yazıp ekle butonuna basınız.
+
+Satış ekleme: Satış ekle butonuna basın, müşteri bölümüne basıp müşteri adını seçin, satılan ürünleri ürünler bölümüne yazınız ve ekle butonuna basınız.
+
+Destek talebi ekleme: Destek talebi ekle butonuna basın, müşteri bölümüne basıp müşteri adını seçin, destek talebinin detaylarını detaylar kısmına yazınız ve ekle butonuna basınız.

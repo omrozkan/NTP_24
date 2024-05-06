@@ -1,0 +1,7 @@
+Müzik Enstrümanı Dükkanı Yönetimi
+
+Enstrüman ekleme: Enstrüman ekle butonuna basın, enstrümanın adını ve mevcut olan stoğu giriniz. Sonrasında ekle butonuna basınız.
+
+Satış yapma: Enstrümanlar eklendikten sonra, satış yap butonuna basın, açılan pencerenin sol tarafındaki enstrüman butonlarından bir tanesine basarak seçim yapın, satılacak miktarı stok miktarına, müşteri adını ve müşteri adresini girip sat butonuna basınız.
+
+Destek oluşturma: Destek oluştur butonuna basınız, enstrüman adı ve mesaj bölgelerini girip oluştur butonuna basınız.
