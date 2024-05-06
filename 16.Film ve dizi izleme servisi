@@ -1,0 +1,308 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, \
+    QListWidget, QListWidgetItem, QDialog, QHBoxLayout, QTextEdit
+import sys
+
+
+class Film:
+    def __init__(self, adi, yonetmen, tur, sure):
+        self.adi = adi
+        self.yonetmen = yonetmen
+        self.tur = tur
+        self.sure = sure
+
+
+class Kullanici:
+    def __init__(self, kullanici_adi, sifre):
+        self.kullanici_adi = kullanici_adi
+        self.sifre = sifre
+        self.izleme_listesi = []
+
+    def film_izleme_listesine_ekle(self, film):
+        self.izleme_listesi.append(film)
+
+
+class GirisPenceresi(QWidget):
+    def __init__(self, ana_pencere):
+        super().__init__()
+        self.ana_pencere = ana_pencere
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("Giriş Yap")
+        self.setGeometry(200, 200, 300, 150)
+
+        self.kullanici_adi_label = QLabel("Kullanıcı Adı:")
+        self.kullanici_adi_input = QLineEdit()
+        self.sifre_label = QLabel("Şifre:")
+        self.sifre_input = QLineEdit()
+        self.sifre_input.setEchoMode(QLineEdit.Password)
+        self.giris_button = QPushButton("Giriş Yap")
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.kullanici_adi_label)
+        vbox.addWidget(self.kullanici_adi_input)
+        vbox.addWidget(self.sifre_label)
+        vbox.addWidget(self.sifre_input)
+        vbox.addWidget(self.giris_button)
+
+        self.setLayout(vbox)
+
+        self.giris_button.clicked.connect(self.giris_kontrol)
+
+    def giris_kontrol(self):
+        kullanici_adi = self.kullanici_adi_input.text()
+        sifre = self.sifre_input.text()
+        self.ana_pencere.kullanici_giris_basarili(kullanici_adi, sifre)
+
+
+class FilmPenceresi(QWidget):
+    def __init__(self, kullanici):
+        super().__init__()
+        self.kullanici = kullanici
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("Film Listesi")
+        self.setGeometry(200, 200, 400, 300)
+
+        self.film_listesi_widget = QListWidget()
+        self.detaylar_label = QLabel("Detaylar:")
+        self.detaylar_widget = QLabel()
+
+        self.film_ekle_button = QPushButton("Film Ekle")
+        self.film_sil_button = QPushButton("Film Sil")
+        self.izleme_listesine_ekle_button = QPushButton("İzleme Listesine Ekle")
+        self.izleme_listesi_goster_button = QPushButton("İzleme Listesi")
+        self.cikis_button = QPushButton("Çıkış Yap")
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.film_listesi_widget)
+        vbox.addWidget(self.detaylar_label)
+        vbox.addWidget(self.detaylar_widget)
+        vbox.addWidget(self.film_ekle_button)
+        vbox.addWidget(self.film_sil_button)
+        vbox.addWidget(self.izleme_listesine_ekle_button)
+        vbox.addWidget(self.izleme_listesi_goster_button)
+        vbox.addWidget(self.cikis_button)
+
+        self.setLayout(vbox)
+
+        self.film_listesini_guncelle()
+
+        self.film_ekle_button.clicked.connect(self.film_ekle)
+        self.film_sil_button.clicked.connect(self.film_sil)
+        self.izleme_listesine_ekle_button.clicked.connect(self.izleme_listesine_ekle)
+        self.izleme_listesi_goster_button.clicked.connect(self.izleme_listesi_goster)
+        self.cikis_button.clicked.connect(self.cikis_yap)
+        self.film_listesi_widget.itemClicked.connect(self.film_detaylarini_goster)
+
+    def film_listesini_guncelle(self):
+        film_listesi = [
+            Film("Recepİvedik 1", "Yönetmen ", "Aksiyon", "120 dk"),
+            Film("Recepİvedik 2", "Yönetmen ", "Drama", "150 dk"),
+            Film("Recepİvedik 3", "Yönetmen ", "Komedi", "90 dk")
+        ]
+
+        self.film_listesi_widget.clear()
+        for film in film_listesi:
+            item = QListWidgetItem(f"{film.adi} - {film.yonetmen}")
+            item.film = film  # Her öğenin içine film nesnesini saklıyoruz
+            self.film_listesi_widget.addItem(item)
+
+    def film_detaylarini_goster(self, item):
+        film = item.film
+        detaylar = f"Yönetmen: {film.yonetmen}\nTür: {film.tur}\nSüre: {film.sure}"
+        self.detaylar_widget.setText(detaylar)
+
+    def film_ekle(self):
+        film_ekle_dialog = FilmEkleDialog(self)
+        film_ekle_dialog.exec_()
+
+    def film_sil(self):
+        selected_item = self.film_listesi_widget.currentItem()
+        if selected_item:
+            self.film_listesi_widget.takeItem(self.film_listesi_widget.row(selected_item))
+
+    def izleme_listesine_ekle(self):
+        selected_item = self.film_listesi_widget.currentItem()
+        if selected_item:
+            film = selected_item.film
+            self.kullanici.film_izleme_listesine_ekle(film)
+            QMessageBox.information(self, "Başarılı", "Film izleme listenize eklendi.")
+
+    def izleme_listesi_goster(self):
+        izleme_listesi_dialog = IzlemeListesiDialog(self.kullanici, parent=self)
+        izleme_listesi_dialog.exec_()
+
+    def cikis_yap(self):
+        self.close()
+
+
+class FilmEkleDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("Film Ekle")
+        self.setGeometry(300, 300, 300, 150)
+
+        self.adi_label = QLabel("Film Adı:")
+        self.adi_input = QLineEdit()
+        self.yonetmen_label = QLabel("Yönetmen:")
+        self.yonetmen_input = QLineEdit()
+        self.tur_label = QLabel("Tür:")
+        self.tur_input = QLineEdit()
+        self.sure_label = QLabel("Süre:")
+        self.sure_input = QLineEdit()
+
+        self.ekle_button = QPushButton("Ekle")
+
+        hbox1 = QHBoxLayout()
+        hbox1.addWidget(self.adi_label)
+        hbox1.addWidget(self.adi_input)
+        hbox1.addWidget(self.yonetmen_label)
+        hbox1.addWidget(self.yonetmen_input)
+
+        hbox2 = QHBoxLayout()
+        hbox2.addWidget(self.tur_label)
+        hbox2.addWidget(self.tur_input)
+        hbox2.addWidget(self.sure_label)
+        hbox2.addWidget(self.sure_input)
+
+        vbox = QVBoxLayout()
+        vbox.addLayout(hbox1)
+        vbox.addLayout(hbox2)
+        vbox.addWidget(self.ekle_button)
+
+        self.setLayout(vbox)
+
+        self.ekle_button.clicked.connect(self.film_ekle)
+
+    def film_ekle(self):
+        adi = self.adi_input.text()
+        yonetmen = self.yonetmen_input.text()
+        tur = self.tur_input.text()
+        sure = self.sure_input.text()
+
+        yeni_film = Film(adi, yonetmen, tur, sure)
+
+        self.parent().film_listesi_widget.addItem(f"{adi} - {yonetmen}")
+
+        self.close()
+
+
+class IzlemeListesiDialog(QDialog):
+    def __init__(self, kullanici, parent=None):
+        super().__init__(parent)
+        self.kullanici = kullanici
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("İzleme Listesi")
+        self.setGeometry(300, 300, 300, 300)
+
+        self.izleme_listesi_widget = QListWidget()
+        self.sil_button = QPushButton("Sil")
+        self.geri_button = QPushButton("Geri")
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.izleme_listesi_widget)
+        vbox.addWidget(self.sil_button)
+        vbox.addWidget(self.geri_button)
+
+        self.setLayout(vbox)
+
+        self.geri_button.clicked.connect(self.close)
+        self.sil_button.clicked.connect(self.film_sil)
+
+        self.izleme_listesi_goster()
+
+    def izleme_listesi_goster(self):
+        for film in self.kullanici.izleme_listesi:
+            item = QListWidgetItem(f"{film.adi} - {film.yonetmen}")
+            item.film = film
+            self.izleme_listesi_widget.addItem(item)
+
+    def film_sil(self):
+        selected_items = self.izleme_listesi_widget.selectedItems()
+        if selected_items:
+            for item in selected_items:
+                film = item.film
+                self.kullanici.izleme_listesi.remove(film)
+                row = self.izleme_listesi_widget.row(item)
+                self.izleme_listesi_widget.takeItem(row)
+
+
+class AnaPencere(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.kullanici_listesi = []
+
+        self.kullanici_adi = None
+        self.kullanici = None
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("Film ve Dizi İzleme Uygulaması")
+        self.setGeometry(200, 200, 300, 150)
+
+        self.giris_penceresi_ac_button = QPushButton("Giriş Yap")
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.giris_penceresi_ac_button)
+
+        self.setLayout(vbox)
+
+        self.giris_penceresi_ac_button.clicked.connect(self.giris_penceresi_ac)
+
+    def giris_penceresi_ac(self):
+        self.giris_penceresi = GirisPenceresi(self)
+        self.giris_penceresi.show()
+
+    def kullanici_giris_basarili(self, kullanici_adi, sifre):
+        for kullanici in self.kullanici_listesi:
+            if kullanici.kullanici_adi == kullanici_adi and kullanici.sifre == sifre:
+                self.kullanici_adi = kullanici_adi
+                self.kullanici = kullanici
+                self.film_penceresi = FilmPenceresi(self.kullanici)
+                self.film_penceresi.show()
+                return
+
+        self.giris_basarisiz_mesaji("Giriş Başarısız", "Kullanıcı adı veya şifre hatalı!")
+
+    def giris_basarisiz_mesaji(self, baslik, icerik):
+        msg = QMessageBox()
+        msg.setWindowTitle(baslik)
+        msg.setText(icerik)
+        msg.exec_()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ana_pencere = AnaPencere()
+
+    # Farklı kullanıcılar oluşturuluyor
+    kullanici1 = Kullanici("root", "root")
+    kullanici2 = Kullanici("kullanici2", "sifre2")
+    kullanici3 = Kullanici("kullanici3", "sifre3")
+
+    ana_pencere.kullanici_listesi = [kullanici1, kullanici2, kullanici3]  # Kullanıcı listesine ekleniyor
+
+    ana_pencere.show()
+    sys.exit(app.exec_())
+
+
+# In[ ]:
+
+
+
+
